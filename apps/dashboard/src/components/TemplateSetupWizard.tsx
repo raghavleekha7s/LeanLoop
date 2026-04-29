@@ -193,6 +193,46 @@ export function TemplateSetupWizard({
                     ) : null}
                   </div>
 
+                  {!connection && spec.oauthStart && (
+                    <details className="mt-3 text-xs text-brand-subtle">
+                      <summary className="cursor-pointer hover:text-brand-text">
+                        Or paste an existing n8n credential ID
+                      </summary>
+                      <div className="mt-2 flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="Credential ID from n8n UI"
+                          className="flex-1 rounded-md border border-brand-line bg-brand-ink px-3 py-1.5 text-white focus:outline-none focus:border-brand-accent"
+                          value={formValues[a.key]?.credentialId ?? ''}
+                          onChange={(e) =>
+                            setFormValues((v) => ({
+                              ...v,
+                              [a.key]: { ...(v[a.key] ?? {}), credentialId: e.target.value },
+                            }))
+                          }
+                        />
+                        <button
+                          onClick={() => {
+                            const id = (formValues[a.key]?.credentialId ?? '').trim();
+                            if (id) {
+                              setConnections((c) => ({
+                                ...c,
+                                [a.key]: { credentialId: id, name: 'Manual ID' },
+                              }));
+                            }
+                          }}
+                          className="rounded-md bg-brand-line px-3 py-1.5 text-xs text-white hover:bg-brand-muted transition"
+                        >
+                          Use
+                        </button>
+                      </div>
+                      <p className="mt-1 text-[10px] text-brand-subtle">
+                        Create the credential in n8n directly, copy its ID from the URL bar
+                        ({"/n8n/credentials/<ID>"}), and paste here.
+                      </p>
+                    </details>
+                  )}
+
                   {!connection && spec.fields.length > 0 && (
                     <div className="mt-3 flex flex-col gap-2">
                       {spec.fields.map((f) => (
