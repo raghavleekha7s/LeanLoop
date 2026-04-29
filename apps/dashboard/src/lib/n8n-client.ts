@@ -29,7 +29,16 @@ async function n8nFetch<T>(path: string, init?: RequestInit): Promise<T> {
     cache: 'no-store',
   });
   if (!res.ok) {
-    throw new Error(`n8n ${path} → ${res.status} ${res.statusText}`);
+    // Surface n8n's actual error body so we can debug schema/field problems.
+    let detail = '';
+    try {
+      const text = await res.text();
+      // Trim huge HTML error pages — we only need the first line/JSON.
+      detail = text.slice(0, 600);
+    } catch {
+      /* ignore */
+    }
+    throw new Error(`n8n ${path} → ${res.status} ${res.statusText} :: ${detail}`);
   }
   return (await res.json()) as T;
 }
