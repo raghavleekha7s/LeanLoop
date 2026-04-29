@@ -18,16 +18,12 @@ RUN npm run build
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-# Next 14 standalone output for a monorepo puts everything under
-# apps/dashboard/. node_modules sits at the standalone root and resolves
-# upward (parent-of-app) so we copy the whole standalone tree to /app.
+# Inside the Docker build context the dashboard is at the root (no monorepo
+# parent visible to Next), so the standalone output places server.js +
+# node_modules directly at .next/standalone/. Copy them to /app.
 COPY --from=builder /app/.next/standalone ./
-# Static assets must sit beside server.js inside apps/dashboard.
-COPY --from=builder /app/.next/static ./apps/dashboard/.next/static
-# 'public' is optional — pre-create then copy if it exists.
-RUN mkdir -p /app/apps/dashboard/public
-COPY --from=builder /app/public ./apps/dashboard/public
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
 
-WORKDIR /app/apps/dashboard
 EXPOSE 3000
 CMD ["node", "server.js"]
