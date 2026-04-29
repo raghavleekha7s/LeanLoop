@@ -1,0 +1,103 @@
+{
+  "id": "daily-sales-summary",
+  "name": "Daily Sales Summary → Sheet",
+  "description": "Every evening at 6 PM, read today's transactions from your sales sheet, total them up, and append a one-row summary to a 'Daily Summary' tab. Replaces the end-of-day Excel SUMIF that someone has to remember to run.",
+  "category": "Finance",
+  "requiredAccounts": [
+    { "key": "googleSheetsCreds", "provider": "google-sheets", "label": "Google Sheets" }
+  ],
+  "variables": [
+    {
+      "key": "leanloopSheetId",
+      "label": "Google Sheet ID",
+      "placeholder": "1A2B3C... (from sheet URL)",
+      "description": "The workbook holding both your raw transactions tab and the summary tab.",
+      "required": true
+    },
+    {
+      "key": "leanloopSourceTab",
+      "label": "Source tab (raw transactions)",
+      "placeholder": "Transactions",
+      "description": "Headers expected: Date, Customer, Amount.",
+      "required": true
+    },
+    {
+      "key": "leanloopSummaryTab",
+      "label": "Summary tab",
+      "placeholder": "Daily Summary",
+      "description": "Headers: Date, Transaction Count, Total Revenue.",
+      "required": true
+    }
+  ],
+  "n8nWorkflow": {
+    "name": "LeanLoop — Daily Sales Summary",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              { "field": "cronExpression", "expression": "0 18 * * *" }
+            ]
+          }
+        },
+        "id": "schedule-1",
+        "name": "Daily 6 PM",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1,
+        "position": [200, 300]
+      },
+      {
+        "parameters": {
+          "operation": "read",
+          "documentId": "__VAR__leanloopSheetId",
+          "sheetName": "__VAR__leanloopSourceTab",
+          "options": {}
+        },
+        "id": "sheets-read",
+        "name": "Read Transactions",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4,
+        "position": [420, 300],
+        "credentials": { "googleApi": "__CRED__googleSheetsCreds" }
+      },
+      {
+        "parameters": {
+          "functionCode": "// Sum 'Amount' for rows whose Date == today (YYYY-MM-DD).\nconst today = new Date().toISOString().slice(0, 10);\nlet count = 0, total = 0;\n\nfor (const item of $input.all()) {\n  const row = item.json;\n  const date = String(row.Date ?? '').slice(0, 10);\n  if (date !== today) continue;\n  count += 1;\n  total += Number(row.Amount ?? 0);\n}\n\nreturn [{ json: { Date: today, 'Transaction Count': count, 'Total Revenue': total } }];"
+        },
+        "id": "fn-1",
+        "name": "Aggregate",
+        "type": "n8n-nodes-base.function",
+        "typeVersion": 1,
+        "position": [640, 300]
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": "__VAR__leanloopSheetId",
+          "sheetName": "__VAR__leanloopSummaryTab",
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Date":              "={{$json.Date}}",
+              "Transaction Count": "={{$json['Transaction Count']}}",
+              "Total Revenue":     "={{$json['Total Revenue']}}"
+            }
+          },
+          "options": {}
+        },
+        "id": "sheets-write",
+        "name": "Append Summary",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4,
+        "position": [880, 300],
+        "credentials": { "googleApi": "__CRED__googleSheetsCreds" }
+      }
+    ],
+    "connections": {
+      "Daily 6 PM":        { "main": [[{ "node": "Read Transactions", "type": "main", "index": 0 }]] },
+      "Read Transactions": { "main": [[{ "node": "Aggregate", "type": "main", "index": 0 }]] },
+      "Aggregate":         { "main": [[{ "node": "Append Summary", "type": "main", "index": 0 }]] }
+    },
+    "settings": { "executionOrder": "v1" }
+  }
+}

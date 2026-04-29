@@ -1,0 +1,106 @@
+{
+  "id": "low-stock-alert",
+  "name": "Low Stock Alert → Sheet",
+  "description": "Every morning at 9 AM, read your inventory sheet, find every SKU below its reorder threshold, and append the list to a 'Low Stock' tab so the procurement team has a fresh list to act on. No more 'we ran out of X' phone calls.",
+  "category": "Logistics",
+  "requiredAccounts": [
+    { "key": "googleSheetsCreds", "provider": "google-sheets", "label": "Google Sheets" }
+  ],
+  "variables": [
+    {
+      "key": "leanloopSheetId",
+      "label": "Google Sheet ID",
+      "placeholder": "1A2B3C...",
+      "description": "Workbook with your inventory tab and the alerts tab.",
+      "required": true
+    },
+    {
+      "key": "leanloopInventoryTab",
+      "label": "Inventory tab",
+      "placeholder": "Inventory",
+      "description": "Headers expected: SKU, Product, Quantity, Threshold.",
+      "required": true
+    },
+    {
+      "key": "leanloopAlertsTab",
+      "label": "Alerts tab",
+      "placeholder": "Low Stock",
+      "description": "Headers: Checked At, SKU, Product, Current Qty, Threshold, Shortfall.",
+      "required": true
+    }
+  ],
+  "n8nWorkflow": {
+    "name": "LeanLoop — Low Stock Alert",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              { "field": "cronExpression", "expression": "0 9 * * *" }
+            ]
+          }
+        },
+        "id": "schedule-1",
+        "name": "Daily 9 AM",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1,
+        "position": [200, 300]
+      },
+      {
+        "parameters": {
+          "operation": "read",
+          "documentId": "__VAR__leanloopSheetId",
+          "sheetName": "__VAR__leanloopInventoryTab",
+          "options": {}
+        },
+        "id": "sheets-read",
+        "name": "Read Inventory",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4,
+        "position": [420, 300],
+        "credentials": { "googleApi": "__CRED__googleSheetsCreds" }
+      },
+      {
+        "parameters": {
+          "functionCode": "// Emit one item per row that's at or below its reorder threshold.\nconst now = new Date().toISOString();\nconst out = [];\n\nfor (const item of $input.all()) {\n  const row = item.json;\n  const qty       = Number(row.Quantity  ?? 0);\n  const threshold = Number(row.Threshold ?? 0);\n  if (!threshold) continue;\n  if (qty <= threshold) {\n    out.push({\n      json: {\n        'Checked At':  now,\n        'SKU':         row.SKU ?? '',\n        'Product':     row.Product ?? '',\n        'Current Qty': qty,\n        'Threshold':   threshold,\n        'Shortfall':   threshold - qty\n      }\n    });\n  }\n}\nreturn out;"
+        },
+        "id": "fn-1",
+        "name": "Filter Low Stock",
+        "type": "n8n-nodes-base.function",
+        "typeVersion": 1,
+        "position": [640, 300]
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": "__VAR__leanloopSheetId",
+          "sheetName": "__VAR__leanloopAlertsTab",
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Checked At":  "={{$json['Checked At']}}",
+              "SKU":         "={{$json.SKU}}",
+              "Product":     "={{$json.Product}}",
+              "Current Qty": "={{$json['Current Qty']}}",
+              "Threshold":   "={{$json.Threshold}}",
+              "Shortfall":   "={{$json.Shortfall}}"
+            }
+          },
+          "options": {}
+        },
+        "id": "sheets-write",
+        "name": "Append Alerts",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4,
+        "position": [880, 300],
+        "credentials": { "googleApi": "__CRED__googleSheetsCreds" }
+      }
+    ],
+    "connections": {
+      "Daily 9 AM":      { "main": [[{ "node": "Read Inventory", "type": "main", "index": 0 }]] },
+      "Read Inventory":  { "main": [[{ "node": "Filter Low Stock", "type": "main", "index": 0 }]] },
+      "Filter Low Stock":{ "main": [[{ "node": "Append Alerts", "type": "main", "index": 0 }]] }
+    },
+    "settings": { "executionOrder": "v1" }
+  }
+}

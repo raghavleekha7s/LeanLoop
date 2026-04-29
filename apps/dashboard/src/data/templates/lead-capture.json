@@ -1,0 +1,79 @@
+{
+  "id": "lead-capture",
+  "name": "Website Lead → Sheet (with priority tag)",
+  "description": "When a customer fills out your website contact form, capture them as a lead in a Google Sheet — automatically labelled HOT / WARM / COLD based on the source channel. Replaces the manual copy-paste-from-email workflow most MSMEs do today.",
+  "category": "Sales",
+  "requiredAccounts": [
+    { "key": "googleSheetsCreds", "provider": "google-sheets", "label": "Google Sheets" }
+  ],
+  "variables": [
+    {
+      "key": "leanloopSheetId",
+      "label": "Google Sheet ID",
+      "placeholder": "1A2B3C... (from sheet URL)",
+      "description": "Sheet the lead rows go into.",
+      "required": true
+    },
+    {
+      "key": "leanloopSheetTab",
+      "label": "Tab name",
+      "placeholder": "Leads",
+      "description": "Header row should be: Captured At, Name, Email, Phone, Source, Priority, Notes",
+      "required": true
+    }
+  ],
+  "n8nWorkflow": {
+    "name": "LeanLoop — Website Lead Capture",
+    "nodes": [
+      {
+        "parameters": { "path": "lead-capture", "options": {} },
+        "id": "webhook-1",
+        "name": "Form Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1,
+        "position": [240, 300]
+      },
+      {
+        "parameters": {
+          "functionCode": "// Score the lead based on which channel it came from. MSMEs typically\n// know that referrals close at 30%+ while cold form-fills close at 2-5%.\nconst body = $json.body ?? $json;\nconst source = (body.source ?? 'website').toLowerCase();\n\nlet priority;\nif (['referral','whatsapp','phone'].includes(source)) priority = 'HOT';\nelse if (['instagram','facebook','google-ads'].includes(source)) priority = 'WARM';\nelse priority = 'COLD';\n\nreturn [{\n  json: {\n    capturedAt: new Date().toISOString(),\n    name:    body.name ?? 'Anonymous',\n    email:   body.email ?? '',\n    phone:   body.phone ?? '',\n    source:  body.source ?? 'website',\n    priority,\n    notes:   body.notes ?? body.message ?? ''\n  }\n}];"
+        },
+        "id": "fn-1",
+        "name": "Score & Tag",
+        "type": "n8n-nodes-base.function",
+        "typeVersion": 1,
+        "position": [480, 300]
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": "__VAR__leanloopSheetId",
+          "sheetName": "__VAR__leanloopSheetTab",
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Captured At": "={{$json.capturedAt}}",
+              "Name":        "={{$json.name}}",
+              "Email":       "={{$json.email}}",
+              "Phone":       "={{$json.phone}}",
+              "Source":      "={{$json.source}}",
+              "Priority":    "={{$json.priority}}",
+              "Notes":       "={{$json.notes}}"
+            }
+          },
+          "options": {}
+        },
+        "id": "sheets-1",
+        "name": "Append Lead",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4,
+        "position": [720, 300],
+        "credentials": { "googleApi": "__CRED__googleSheetsCreds" }
+      }
+    ],
+    "connections": {
+      "Form Webhook": { "main": [[{ "node": "Score & Tag", "type": "main", "index": 0 }]] },
+      "Score & Tag":  { "main": [[{ "node": "Append Lead", "type": "main", "index": 0 }]] }
+    },
+    "settings": { "executionOrder": "v1" }
+  }
+}

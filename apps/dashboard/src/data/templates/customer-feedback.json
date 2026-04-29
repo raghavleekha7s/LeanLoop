@@ -1,0 +1,77 @@
+{
+  "id": "customer-feedback",
+  "name": "Customer Feedback → Sheet (with sentiment)",
+  "description": "When a customer submits a feedback form (or scans a QR-code feedback page), capture the response in a Google Sheet — automatically labelled POSITIVE / NEUTRAL / NEGATIVE based on the rating, so the support team can triage at a glance.",
+  "category": "Support",
+  "requiredAccounts": [
+    { "key": "googleSheetsCreds", "provider": "google-sheets", "label": "Google Sheets" }
+  ],
+  "variables": [
+    {
+      "key": "leanloopSheetId",
+      "label": "Google Sheet ID",
+      "placeholder": "1A2B3C...",
+      "description": "Sheet to log feedback into.",
+      "required": true
+    },
+    {
+      "key": "leanloopSheetTab",
+      "label": "Tab name",
+      "placeholder": "Feedback",
+      "description": "Headers: Submitted At, Customer, Rating, Sentiment, Comment.",
+      "required": true
+    }
+  ],
+  "n8nWorkflow": {
+    "name": "LeanLoop — Customer Feedback Collector",
+    "nodes": [
+      {
+        "parameters": { "path": "feedback", "options": {} },
+        "id": "webhook-1",
+        "name": "Feedback Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1,
+        "position": [240, 300]
+      },
+      {
+        "parameters": {
+          "functionCode": "// Map a 1-5 rating to a sentiment bucket and pass through the rest.\nconst body = $json.body ?? $json;\nconst rating = Number(body.rating ?? 0);\n\nlet sentiment;\nif (rating >= 4)      sentiment = 'POSITIVE';\nelse if (rating >= 3) sentiment = 'NEUTRAL';\nelse if (rating >= 1) sentiment = 'NEGATIVE';\nelse                  sentiment = 'UNRATED';\n\nreturn [{\n  json: {\n    'Submitted At': new Date().toISOString(),\n    'Customer':     body.customer ?? body.name ?? 'Anonymous',\n    'Rating':       rating || '',\n    'Sentiment':    sentiment,\n    'Comment':      body.comment ?? body.message ?? ''\n  }\n}];"
+        },
+        "id": "fn-1",
+        "name": "Score Sentiment",
+        "type": "n8n-nodes-base.function",
+        "typeVersion": 1,
+        "position": [480, 300]
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": "__VAR__leanloopSheetId",
+          "sheetName": "__VAR__leanloopSheetTab",
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Submitted At": "={{$json['Submitted At']}}",
+              "Customer":     "={{$json.Customer}}",
+              "Rating":       "={{$json.Rating}}",
+              "Sentiment":    "={{$json.Sentiment}}",
+              "Comment":      "={{$json.Comment}}"
+            }
+          },
+          "options": {}
+        },
+        "id": "sheets-1",
+        "name": "Append Feedback",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4,
+        "position": [720, 300],
+        "credentials": { "googleApi": "__CRED__googleSheetsCreds" }
+      }
+    ],
+    "connections": {
+      "Feedback Webhook": { "main": [[{ "node": "Score Sentiment", "type": "main", "index": 0 }]] },
+      "Score Sentiment":  { "main": [[{ "node": "Append Feedback", "type": "main", "index": 0 }]] }
+    },
+    "settings": { "executionOrder": "v1" }
+  }
+}
