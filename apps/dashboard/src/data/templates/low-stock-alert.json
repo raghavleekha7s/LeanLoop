@@ -60,8 +60,16 @@
         "parameters": {
           "authentication": "serviceAccount",
           "operation": "read",
-          "documentId": "__VAR__leanloopSheetId",
-          "sheetName": "__VAR__leanloopInventoryTab",
+          "documentId": {
+            "__rl": true,
+            "value": "__VAR__leanloopSheetId",
+            "mode": "id"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "__VAR__leanloopInventoryTab",
+            "mode": "name"
+          },
           "options": {}
         },
         "id": "sheets-read",
@@ -93,8 +101,16 @@
         "parameters": {
           "authentication": "serviceAccount",
           "operation": "append",
-          "documentId": "__VAR__leanloopSheetId",
-          "sheetName": "__VAR__leanloopAlertsTab",
+          "documentId": {
+            "__rl": true,
+            "value": "__VAR__leanloopSheetId",
+            "mode": "id"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "__VAR__leanloopAlertsTab",
+            "mode": "name"
+          },
           "columns": {
             "mappingMode": "defineBelow",
             "value": {

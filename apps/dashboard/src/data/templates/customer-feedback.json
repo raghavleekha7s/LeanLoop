@@ -61,8 +61,16 @@
         "parameters": {
           "authentication": "serviceAccount",
           "operation": "append",
-          "documentId": "__VAR__leanloopSheetId",
-          "sheetName": "__VAR__leanloopSheetTab",
+          "documentId": {
+            "__rl": true,
+            "value": "__VAR__leanloopSheetId",
+            "mode": "id"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "__VAR__leanloopSheetTab",
+            "mode": "name"
+          },
           "columns": {
             "mappingMode": "defineBelow",
             "value": {
