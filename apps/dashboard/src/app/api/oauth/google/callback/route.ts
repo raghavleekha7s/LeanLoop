@@ -45,9 +45,6 @@ export async function GET(req: Request) {
         clientId: process.env.GOOGLE_OAUTH_CLIENT_ID,
         clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET,
         oauthTokenData,
-        // Some n8n credentials also read top-level access/refresh tokens.
-        accessToken: tokens.access_token,
-        refreshToken: tokens.refresh_token,
       },
     });
 
