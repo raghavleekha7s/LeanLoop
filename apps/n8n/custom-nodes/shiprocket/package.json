@@ -1,0 +1,13 @@
+{
+  "name": "n8n-nodes-leanloop-shiprocket",
+  "version": "0.1.0",
+  "description": "Shiprocket node for n8n (LeanLoop).",
+  "main": "index.js",
+  "scripts": { "build": "tsc" },
+  "n8n": {
+    "credentials": ["dist/credentials/ShiprocketApi.credentials.js"],
+    "nodes": ["dist/nodes/Shiprocket/Shiprocket.node.js"]
+  },
+  "peerDependencies": { "n8n-workflow": "*" },
+  "devDependencies": { "n8n-workflow": "*", "typescript": "^5.5.3" }
+}

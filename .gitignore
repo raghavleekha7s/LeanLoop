@@ -1,0 +1,32 @@
+node_modules
+.next
+dist
+out
+build
+coverage
+*.tsbuildinfo
+
+.env
+.env.local
+.env.*.local
+!.env.example
+
+.DS_Store
+*.log
+npm-debug.log*
+
+# n8n runtime state (persisted via docker volumes)
+.n8n
+/data
+
+# IDE
+.vscode
+.idea
+*.swp
+
+# Vercel
+.vercel
+
+# Generated artefacts (not source)
+LeanLoop-Project-Report.pdf
+LeanLoop-Pugh-Chart.pdf

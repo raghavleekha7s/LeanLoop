@@ -1,0 +1,13 @@
+{
+  "name": "n8n-nodes-leanloop-gst-invoice",
+  "version": "0.1.0",
+  "description": "GST-compliant invoice generator node for n8n (LeanLoop).",
+  "main": "index.js",
+  "scripts": { "build": "tsc" },
+  "n8n": {
+    "credentials": ["dist/credentials/GstInvoiceApi.credentials.js"],
+    "nodes": ["dist/nodes/GstInvoice/GstInvoice.node.js"]
+  },
+  "peerDependencies": { "n8n-workflow": "*" },
+  "devDependencies": { "n8n-workflow": "*", "typescript": "^5.5.3" }
+}

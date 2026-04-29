@@ -1,0 +1,20 @@
+{
+  "name": "n8n-nodes-leanloop-razorpay",
+  "version": "0.1.0",
+  "description": "Razorpay node for n8n (LeanLoop).",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc && cp -r nodes/**/*.svg dist/nodes/ 2>/dev/null || true"
+  },
+  "n8n": {
+    "credentials": ["dist/credentials/RazorpayApi.credentials.js"],
+    "nodes": ["dist/nodes/Razorpay/Razorpay.node.js"]
+  },
+  "peerDependencies": {
+    "n8n-workflow": "*"
+  },
+  "devDependencies": {
+    "n8n-workflow": "*",
+    "typescript": "^5.5.3"
+  }
+}

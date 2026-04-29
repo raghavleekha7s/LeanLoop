@@ -1,0 +1,30 @@
+# LeanLoop reverse proxy.
+# - Automatic HTTPS via Let's Encrypt when DOMAIN is not "localhost".
+# - Routes /n8n/* to the n8n container, everything else to the dashboard.
+#
+# In local dev (DOMAIN=localhost) Caddy serves plain HTTP on :80 with no
+# certificate provisioning — lets the installer run without a real domain.
+
+{
+	email {$ACME_EMAIL}
+	auto_https off  # enabled per-site block when domain != localhost
+}
+
+{$DOMAIN} {
+	# Turn on auto-HTTPS if we're not on localhost.
+	@isLocal expression `{env.DOMAIN} == "localhost"`
+	handle @isLocal {
+		# nothing — localhost stays HTTP
+	}
+	handle {
+		tls {$ACME_EMAIL}
+	}
+
+	# n8n UI + API. Strip the /n8n prefix before forwarding.
+	handle_path /n8n/* {
+		reverse_proxy n8n:5678
+	}
+
+	# Dashboard (default).
+	reverse_proxy dashboard:3000
+}

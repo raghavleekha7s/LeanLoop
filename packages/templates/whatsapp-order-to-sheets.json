@@ -1,0 +1,76 @@
+{
+  "id": "whatsapp-order-to-sheets",
+  "name": "WhatsApp Order → Google Sheets",
+  "description": "When a customer sends an order on WhatsApp, capture it as a row in a Google Sheet.",
+  "category": "Sales",
+  "requiredAccounts": [
+    { "key": "googleSheetsCreds", "provider": "google-sheets", "label": "Google Sheets" }
+  ],
+  "variables": [
+    {
+      "key": "leanloopSheetId",
+      "label": "Google Sheet ID",
+      "placeholder": "1A2B3C... (from the sheet URL)",
+      "description": "Open your Sheet, copy the long ID between /d/ and /edit in the URL.",
+      "required": true
+    },
+    {
+      "key": "leanloopSheetTab",
+      "label": "Tab name",
+      "placeholder": "Orders",
+      "description": "The exact name of the tab to append rows into.",
+      "required": true
+    }
+  ],
+  "n8nWorkflow": {
+    "name": "LeanLoop — WhatsApp Order to Google Sheets",
+    "nodes": [
+      {
+        "parameters": { "path": "whatsapp-order", "options": {} },
+        "id": "webhook-1",
+        "name": "WhatsApp Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1,
+        "position": [240, 300]
+      },
+      {
+        "parameters": {
+          "functionCode": "const value = $json.body ?? $json;\nconst entry = value.entry?.[0];\nconst change = entry?.changes?.[0]?.value;\nconst msg = change?.messages?.[0];\nconst contact = change?.contacts?.[0];\nreturn [{\n  json: {\n    customer: msg?.from ?? '',\n    customerName: contact?.profile?.name ?? '',\n    text: msg?.text?.body ?? '',\n    type: msg?.type ?? 'unknown',\n    receivedAt: new Date().toISOString()\n  }\n}];"
+        },
+        "id": "fn-1",
+        "name": "Parse Order",
+        "type": "n8n-nodes-base.function",
+        "typeVersion": 1,
+        "position": [480, 300]
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": "__VAR__leanloopSheetId",
+          "sheetName": "__VAR__leanloopSheetTab",
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Received At": "={{$json.receivedAt}}",
+              "Customer": "={{$json.customer}}",
+              "Customer Name": "={{$json.customerName}}",
+              "Message": "={{$json.text}}"
+            }
+          },
+          "options": {}
+        },
+        "id": "sheets-1",
+        "name": "Append Row",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4,
+        "position": [720, 300],
+        "credentials": { "googleApi": "__CRED__googleSheetsCreds" }
+      }
+    ],
+    "connections": {
+      "WhatsApp Webhook": { "main": [[{ "node": "Parse Order", "type": "main", "index": 0 }]] },
+      "Parse Order": { "main": [[{ "node": "Append Row", "type": "main", "index": 0 }]] }
+    },
+    "settings": { "executionOrder": "v1" }
+  }
+}

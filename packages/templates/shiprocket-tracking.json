@@ -1,0 +1,50 @@
+{
+  "id": "shiprocket-tracking-to-whatsapp",
+  "name": "Shiprocket Status → WhatsApp Update",
+  "description": "When a Shiprocket shipment changes status, send the customer a WhatsApp update.",
+  "category": "Logistics",
+  "requiredAccounts": [
+    { "key": "shiprocketCreds", "provider": "shiprocket", "label": "Shiprocket" },
+    { "key": "whatsappCreds", "provider": "whatsapp", "label": "WhatsApp Business" }
+  ],
+  "n8nWorkflow": {
+    "name": "LeanLoop — Shiprocket Tracking to WhatsApp",
+    "nodes": [
+      {
+        "parameters": { "path": "shiprocket-webhook", "options": {} },
+        "id": "webhook-1",
+        "name": "Shiprocket Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1,
+        "position": [240, 300]
+      },
+      {
+        "parameters": {
+          "functionCode": "const s = $json.body ?? {};\nreturn [{ json: { phone: s.customer_phone, order: s.order_id, status: s.current_status, awb: s.awb } }];"
+        },
+        "id": "fn-1",
+        "name": "Extract Fields",
+        "type": "n8n-nodes-base.function",
+        "typeVersion": 1,
+        "position": [480, 300]
+      },
+      {
+        "parameters": {
+          "to": "={{$json.phone}}",
+          "message": "Hi! Your order {{$json.order}} is now: {{$json.status}} (AWB: {{$json.awb}})."
+        },
+        "id": "wa-1",
+        "name": "Send WhatsApp",
+        "type": "n8n-nodes-leanloop.whatsapp",
+        "typeVersion": 1,
+        "position": [720, 300],
+        "credentials": { "whatsappApi": "__CRED__whatsappCreds" }
+      }
+    ],
+    "connections": {
+      "Shiprocket Webhook": { "main": [[{ "node": "Extract Fields", "type": "main", "index": 0 }]] },
+      "Extract Fields": { "main": [[{ "node": "Send WhatsApp", "type": "main", "index": 0 }]] }
+    },
+    "settings": { "executionOrder": "v1" }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "leanloop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "LeanLoop — template-first, self-hosted workflow automation for Indian SMEs, built on n8n.",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=@leanloop/dashboard",
+    "build": "npm run build --workspace=@leanloop/dashboard",
+    "lint": "npm run lint --workspace=@leanloop/dashboard",
+    "up": "docker compose up -d --build",
+    "down": "docker compose down",
+    "logs": "docker compose logs -f"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

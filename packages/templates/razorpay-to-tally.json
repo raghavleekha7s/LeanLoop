@@ -1,0 +1,47 @@
+{
+  "id": "razorpay-to-tally",
+  "name": "Razorpay Payment → Tally Entry",
+  "description": "On a successful Razorpay payment, post a sales voucher to Tally automatically.",
+  "category": "Finance",
+  "requiredAccounts": [
+    { "key": "razorpayCreds", "provider": "razorpay", "label": "Razorpay" },
+    { "key": "tallyCreds", "provider": "tally", "label": "Tally" }
+  ],
+  "n8nWorkflow": {
+    "name": "LeanLoop — Razorpay to Tally",
+    "nodes": [
+      {
+        "parameters": { "path": "razorpay-webhook", "options": {} },
+        "id": "webhook-1",
+        "name": "Razorpay Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1,
+        "position": [240, 300]
+      },
+      {
+        "parameters": {
+          "functionCode": "if ($json.body?.event !== 'payment.captured') { return []; }\nconst p = $json.body.payload.payment.entity;\nreturn [{ json: { amount: p.amount / 100, currency: p.currency, paymentId: p.id, customerEmail: p.email, capturedAt: new Date(p.created_at * 1000).toISOString() } }];"
+        },
+        "id": "fn-1",
+        "name": "Filter Captured",
+        "type": "n8n-nodes-base.function",
+        "typeVersion": 1,
+        "position": [480, 300]
+      },
+      {
+        "parameters": {},
+        "id": "tally-1",
+        "name": "Post to Tally",
+        "type": "n8n-nodes-leanloop.tally",
+        "typeVersion": 1,
+        "position": [720, 300],
+        "credentials": { "tallyApi": "__CRED__tallyCreds" }
+      }
+    ],
+    "connections": {
+      "Razorpay Webhook": { "main": [[{ "node": "Filter Captured", "type": "main", "index": 0 }]] },
+      "Filter Captured": { "main": [[{ "node": "Post to Tally", "type": "main", "index": 0 }]] }
+    },
+    "settings": { "executionOrder": "v1" }
+  }
+}

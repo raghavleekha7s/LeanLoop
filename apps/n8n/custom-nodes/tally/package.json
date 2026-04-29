@@ -1,0 +1,13 @@
+{
+  "name": "n8n-nodes-leanloop-tally",
+  "version": "0.1.0",
+  "description": "Tally node for n8n (LeanLoop) — posts vouchers via Tally's XML gateway.",
+  "main": "index.js",
+  "scripts": { "build": "tsc" },
+  "n8n": {
+    "credentials": ["dist/credentials/TallyApi.credentials.js"],
+    "nodes": ["dist/nodes/Tally/Tally.node.js"]
+  },
+  "peerDependencies": { "n8n-workflow": "*" },
+  "devDependencies": { "n8n-workflow": "*", "typescript": "^5.5.3" }
+}
