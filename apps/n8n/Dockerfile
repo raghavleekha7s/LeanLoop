@@ -1,4 +1,9 @@
 # Build stage — compiles each LeanLoop custom node package to dist/
+# We use --ignore-scripts because n8n-workflow's transitive dep `isolated-vm`
+# tries to compile native code (needs Python + build tools). Our custom nodes
+# only need n8n-workflow's TypeScript declarations, not its runtime, so we
+# skip postinstall scripts entirely. n8n provides the runtime at execution
+# time inside the n8n image.
 FROM node:20-alpine AS builder
 WORKDIR /build
 
@@ -11,7 +16,7 @@ RUN set -eu; \
       if [ -f "$pkg/package.json" ]; then \
         echo "── Building $pkg ──"; \
         cd "$pkg"; \
-        npm install --no-audit --no-fund; \
+        npm install --no-audit --no-fund --ignore-scripts; \
         npm run build; \
         cd ..; \
       fi; \
