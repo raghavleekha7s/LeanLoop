@@ -1,10 +1,14 @@
 {
   "id": "gst-filing-reminder",
-  "name": "GSTR-3B Filing Reminder → Sheet log",
-  "description": "On the 18th of every month, log a GST filing reminder to a compliance sheet — two days before the 20th GSTR-3B deadline. India-specific compliance automation, replacing the WhatsApp reminders MSME owners send themselves.",
+  "name": "GSTR-3B Filing Reminder \u2192 Sheet log",
+  "description": "On the 18th of every month, log a GST filing reminder to a compliance sheet \u2014 two days before the 20th GSTR-3B deadline. India-specific compliance automation, replacing the WhatsApp reminders MSME owners send themselves.",
   "category": "Finance",
   "requiredAccounts": [
-    { "key": "googleSheetsCreds", "provider": "google-sheets", "label": "Google Sheets" }
+    {
+      "key": "googleSheetsCreds",
+      "provider": "google-sheets",
+      "label": "Google Sheets"
+    }
   ],
   "variables": [
     {
@@ -30,13 +34,16 @@
     }
   ],
   "n8nWorkflow": {
-    "name": "LeanLoop — GSTR-3B Filing Reminder",
+    "name": "LeanLoop \u2014 GSTR-3B Filing Reminder",
     "nodes": [
       {
         "parameters": {
           "rule": {
             "interval": [
-              { "field": "cronExpression", "expression": "0 10 18 * *" }
+              {
+                "field": "cronExpression",
+                "expression": "0 10 18 * *"
+              }
             ]
           }
         },
@@ -44,32 +51,39 @@
         "name": "18th of month, 10 AM",
         "type": "n8n-nodes-base.scheduleTrigger",
         "typeVersion": 1,
-        "position": [220, 300]
+        "position": [
+          220,
+          300
+        ]
       },
       {
         "parameters": {
-          "functionCode": "// GSTR-3B for the previous month is due on the 20th, so the 18th is a\n// 2-day-out reminder. Compute the tax period (last calendar month).\nconst now = new Date();\nconst prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);\nconst monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];\nconst taxPeriod = `${monthNames[prev.getMonth()]} ${prev.getFullYear()}`;\nconst deadline = new Date(now.getFullYear(), now.getMonth(), 20).toISOString().slice(0, 10);\n\nreturn [{\n  json: {\n    'Logged At':  now.toISOString(),\n    'Tax Period': taxPeriod,\n    'Form':       'GSTR-3B',\n    'Deadline':   deadline,\n    'Status':     'Reminder issued — file at gst.gov.in'\n  }\n}];"
+          "functionCode": "// GSTR-3B for the previous month is due on the 20th, so the 18th is a\n// 2-day-out reminder. Compute the tax period (last calendar month).\nconst now = new Date();\nconst prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);\nconst monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];\nconst taxPeriod = `${monthNames[prev.getMonth()]} ${prev.getFullYear()}`;\nconst deadline = new Date(now.getFullYear(), now.getMonth(), 20).toISOString().slice(0, 10);\n\nreturn [{\n  json: {\n    'Logged At':  now.toISOString(),\n    'Tax Period': taxPeriod,\n    'Form':       'GSTR-3B',\n    'Deadline':   deadline,\n    'Status':     'Reminder issued \u2014 file at gst.gov.in'\n  }\n}];"
         },
         "id": "fn-1",
         "name": "Build Reminder",
         "type": "n8n-nodes-base.function",
         "typeVersion": 1,
-        "position": [460, 300]
+        "position": [
+          460,
+          300
+        ]
       },
       {
         "parameters": {
+          "authentication": "serviceAccount",
           "operation": "append",
           "documentId": "__VAR__leanloopSheetId",
           "sheetName": "__VAR__leanloopSheetTab",
           "columns": {
             "mappingMode": "defineBelow",
             "value": {
-              "Logged At":  "={{$json['Logged At']}}",
+              "Logged At": "={{$json['Logged At']}}",
               "Tax Period": "={{$json['Tax Period']}}",
-              "Form":       "={{$json.Form}}",
-              "Deadline":   "={{$json.Deadline}}",
-              "Status":     "={{$json.Status}}",
-              "GSTIN":      "__VAR__leanloopGstin"
+              "Form": "={{$json.Form}}",
+              "Deadline": "={{$json.Deadline}}",
+              "Status": "={{$json.Status}}",
+              "GSTIN": "__VAR__leanloopGstin"
             }
           },
           "options": {}
@@ -78,14 +92,41 @@
         "name": "Log Reminder",
         "type": "n8n-nodes-base.googleSheets",
         "typeVersion": 4,
-        "position": [700, 300],
-        "credentials": { "googleApi": "__CRED__googleSheetsCreds" }
+        "position": [
+          700,
+          300
+        ],
+        "credentials": {
+          "googleApi": "__CRED__googleSheetsCreds"
+        }
       }
     ],
     "connections": {
-      "18th of month, 10 AM": { "main": [[{ "node": "Build Reminder", "type": "main", "index": 0 }]] },
-      "Build Reminder":       { "main": [[{ "node": "Log Reminder", "type": "main", "index": 0 }]] }
+      "18th of month, 10 AM": {
+        "main": [
+          [
+            {
+              "node": "Build Reminder",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Reminder": {
+        "main": [
+          [
+            {
+              "node": "Log Reminder",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
     },
-    "settings": { "executionOrder": "v1" }
+    "settings": {
+      "executionOrder": "v1"
+    }
   }
 }

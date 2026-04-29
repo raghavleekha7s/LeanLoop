@@ -1,10 +1,14 @@
 {
   "id": "lead-capture",
-  "name": "Website Lead → Sheet (with priority tag)",
-  "description": "When a customer fills out your website contact form, capture them as a lead in a Google Sheet — automatically labelled HOT / WARM / COLD based on the source channel. Replaces the manual copy-paste-from-email workflow most MSMEs do today.",
+  "name": "Website Lead \u2192 Sheet (with priority tag)",
+  "description": "When a customer fills out your website contact form, capture them as a lead in a Google Sheet \u2014 automatically labelled HOT / WARM / COLD based on the source channel. Replaces the manual copy-paste-from-email workflow most MSMEs do today.",
   "category": "Sales",
   "requiredAccounts": [
-    { "key": "googleSheetsCreds", "provider": "google-sheets", "label": "Google Sheets" }
+    {
+      "key": "googleSheetsCreds",
+      "provider": "google-sheets",
+      "label": "Google Sheets"
+    }
   ],
   "variables": [
     {
@@ -23,15 +27,21 @@
     }
   ],
   "n8nWorkflow": {
-    "name": "LeanLoop — Website Lead Capture",
+    "name": "LeanLoop \u2014 Website Lead Capture",
     "nodes": [
       {
-        "parameters": { "path": "lead-capture", "options": {} },
+        "parameters": {
+          "path": "lead-capture",
+          "options": {}
+        },
         "id": "webhook-1",
         "name": "Form Webhook",
         "type": "n8n-nodes-base.webhook",
         "typeVersion": 1,
-        "position": [240, 300]
+        "position": [
+          240,
+          300
+        ]
       },
       {
         "parameters": {
@@ -41,10 +51,14 @@
         "name": "Score & Tag",
         "type": "n8n-nodes-base.function",
         "typeVersion": 1,
-        "position": [480, 300]
+        "position": [
+          480,
+          300
+        ]
       },
       {
         "parameters": {
+          "authentication": "serviceAccount",
           "operation": "append",
           "documentId": "__VAR__leanloopSheetId",
           "sheetName": "__VAR__leanloopSheetTab",
@@ -52,12 +66,12 @@
             "mappingMode": "defineBelow",
             "value": {
               "Captured At": "={{$json.capturedAt}}",
-              "Name":        "={{$json.name}}",
-              "Email":       "={{$json.email}}",
-              "Phone":       "={{$json.phone}}",
-              "Source":      "={{$json.source}}",
-              "Priority":    "={{$json.priority}}",
-              "Notes":       "={{$json.notes}}"
+              "Name": "={{$json.name}}",
+              "Email": "={{$json.email}}",
+              "Phone": "={{$json.phone}}",
+              "Source": "={{$json.source}}",
+              "Priority": "={{$json.priority}}",
+              "Notes": "={{$json.notes}}"
             }
           },
           "options": {}
@@ -66,14 +80,41 @@
         "name": "Append Lead",
         "type": "n8n-nodes-base.googleSheets",
         "typeVersion": 4,
-        "position": [720, 300],
-        "credentials": { "googleApi": "__CRED__googleSheetsCreds" }
+        "position": [
+          720,
+          300
+        ],
+        "credentials": {
+          "googleApi": "__CRED__googleSheetsCreds"
+        }
       }
     ],
     "connections": {
-      "Form Webhook": { "main": [[{ "node": "Score & Tag", "type": "main", "index": 0 }]] },
-      "Score & Tag":  { "main": [[{ "node": "Append Lead", "type": "main", "index": 0 }]] }
+      "Form Webhook": {
+        "main": [
+          [
+            {
+              "node": "Score & Tag",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Score & Tag": {
+        "main": [
+          [
+            {
+              "node": "Append Lead",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
     },
-    "settings": { "executionOrder": "v1" }
+    "settings": {
+      "executionOrder": "v1"
+    }
   }
 }

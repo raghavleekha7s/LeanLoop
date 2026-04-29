@@ -1,10 +1,14 @@
 {
   "id": "daily-sales-summary",
-  "name": "Daily Sales Summary → Sheet",
+  "name": "Daily Sales Summary \u2192 Sheet",
   "description": "Every evening at 6 PM, read today's transactions from your sales sheet, total them up, and append a one-row summary to a 'Daily Summary' tab. Replaces the end-of-day Excel SUMIF that someone has to remember to run.",
   "category": "Finance",
   "requiredAccounts": [
-    { "key": "googleSheetsCreds", "provider": "google-sheets", "label": "Google Sheets" }
+    {
+      "key": "googleSheetsCreds",
+      "provider": "google-sheets",
+      "label": "Google Sheets"
+    }
   ],
   "variables": [
     {
@@ -30,13 +34,16 @@
     }
   ],
   "n8nWorkflow": {
-    "name": "LeanLoop — Daily Sales Summary",
+    "name": "LeanLoop \u2014 Daily Sales Summary",
     "nodes": [
       {
         "parameters": {
           "rule": {
             "interval": [
-              { "field": "cronExpression", "expression": "0 18 * * *" }
+              {
+                "field": "cronExpression",
+                "expression": "0 18 * * *"
+              }
             ]
           }
         },
@@ -44,10 +51,14 @@
         "name": "Daily 6 PM",
         "type": "n8n-nodes-base.scheduleTrigger",
         "typeVersion": 1,
-        "position": [200, 300]
+        "position": [
+          200,
+          300
+        ]
       },
       {
         "parameters": {
+          "authentication": "serviceAccount",
           "operation": "read",
           "documentId": "__VAR__leanloopSheetId",
           "sheetName": "__VAR__leanloopSourceTab",
@@ -57,8 +68,13 @@
         "name": "Read Transactions",
         "type": "n8n-nodes-base.googleSheets",
         "typeVersion": 4,
-        "position": [420, 300],
-        "credentials": { "googleApi": "__CRED__googleSheetsCreds" }
+        "position": [
+          420,
+          300
+        ],
+        "credentials": {
+          "googleApi": "__CRED__googleSheetsCreds"
+        }
       },
       {
         "parameters": {
@@ -68,19 +84,23 @@
         "name": "Aggregate",
         "type": "n8n-nodes-base.function",
         "typeVersion": 1,
-        "position": [640, 300]
+        "position": [
+          640,
+          300
+        ]
       },
       {
         "parameters": {
+          "authentication": "serviceAccount",
           "operation": "append",
           "documentId": "__VAR__leanloopSheetId",
           "sheetName": "__VAR__leanloopSummaryTab",
           "columns": {
             "mappingMode": "defineBelow",
             "value": {
-              "Date":              "={{$json.Date}}",
+              "Date": "={{$json.Date}}",
               "Transaction Count": "={{$json['Transaction Count']}}",
-              "Total Revenue":     "={{$json['Total Revenue']}}"
+              "Total Revenue": "={{$json['Total Revenue']}}"
             }
           },
           "options": {}
@@ -89,15 +109,52 @@
         "name": "Append Summary",
         "type": "n8n-nodes-base.googleSheets",
         "typeVersion": 4,
-        "position": [880, 300],
-        "credentials": { "googleApi": "__CRED__googleSheetsCreds" }
+        "position": [
+          880,
+          300
+        ],
+        "credentials": {
+          "googleApi": "__CRED__googleSheetsCreds"
+        }
       }
     ],
     "connections": {
-      "Daily 6 PM":        { "main": [[{ "node": "Read Transactions", "type": "main", "index": 0 }]] },
-      "Read Transactions": { "main": [[{ "node": "Aggregate", "type": "main", "index": 0 }]] },
-      "Aggregate":         { "main": [[{ "node": "Append Summary", "type": "main", "index": 0 }]] }
+      "Daily 6 PM": {
+        "main": [
+          [
+            {
+              "node": "Read Transactions",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Read Transactions": {
+        "main": [
+          [
+            {
+              "node": "Aggregate",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Aggregate": {
+        "main": [
+          [
+            {
+              "node": "Append Summary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
     },
-    "settings": { "executionOrder": "v1" }
+    "settings": {
+      "executionOrder": "v1"
+    }
   }
 }

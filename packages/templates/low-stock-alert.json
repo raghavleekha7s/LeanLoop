@@ -1,10 +1,14 @@
 {
   "id": "low-stock-alert",
-  "name": "Low Stock Alert → Sheet",
+  "name": "Low Stock Alert \u2192 Sheet",
   "description": "Every morning at 9 AM, read your inventory sheet, find every SKU below its reorder threshold, and append the list to a 'Low Stock' tab so the procurement team has a fresh list to act on. No more 'we ran out of X' phone calls.",
   "category": "Logistics",
   "requiredAccounts": [
-    { "key": "googleSheetsCreds", "provider": "google-sheets", "label": "Google Sheets" }
+    {
+      "key": "googleSheetsCreds",
+      "provider": "google-sheets",
+      "label": "Google Sheets"
+    }
   ],
   "variables": [
     {
@@ -30,13 +34,16 @@
     }
   ],
   "n8nWorkflow": {
-    "name": "LeanLoop — Low Stock Alert",
+    "name": "LeanLoop \u2014 Low Stock Alert",
     "nodes": [
       {
         "parameters": {
           "rule": {
             "interval": [
-              { "field": "cronExpression", "expression": "0 9 * * *" }
+              {
+                "field": "cronExpression",
+                "expression": "0 9 * * *"
+              }
             ]
           }
         },
@@ -44,10 +51,14 @@
         "name": "Daily 9 AM",
         "type": "n8n-nodes-base.scheduleTrigger",
         "typeVersion": 1,
-        "position": [200, 300]
+        "position": [
+          200,
+          300
+        ]
       },
       {
         "parameters": {
+          "authentication": "serviceAccount",
           "operation": "read",
           "documentId": "__VAR__leanloopSheetId",
           "sheetName": "__VAR__leanloopInventoryTab",
@@ -57,8 +68,13 @@
         "name": "Read Inventory",
         "type": "n8n-nodes-base.googleSheets",
         "typeVersion": 4,
-        "position": [420, 300],
-        "credentials": { "googleApi": "__CRED__googleSheetsCreds" }
+        "position": [
+          420,
+          300
+        ],
+        "credentials": {
+          "googleApi": "__CRED__googleSheetsCreds"
+        }
       },
       {
         "parameters": {
@@ -68,22 +84,26 @@
         "name": "Filter Low Stock",
         "type": "n8n-nodes-base.function",
         "typeVersion": 1,
-        "position": [640, 300]
+        "position": [
+          640,
+          300
+        ]
       },
       {
         "parameters": {
+          "authentication": "serviceAccount",
           "operation": "append",
           "documentId": "__VAR__leanloopSheetId",
           "sheetName": "__VAR__leanloopAlertsTab",
           "columns": {
             "mappingMode": "defineBelow",
             "value": {
-              "Checked At":  "={{$json['Checked At']}}",
-              "SKU":         "={{$json.SKU}}",
-              "Product":     "={{$json.Product}}",
+              "Checked At": "={{$json['Checked At']}}",
+              "SKU": "={{$json.SKU}}",
+              "Product": "={{$json.Product}}",
               "Current Qty": "={{$json['Current Qty']}}",
-              "Threshold":   "={{$json.Threshold}}",
-              "Shortfall":   "={{$json.Shortfall}}"
+              "Threshold": "={{$json.Threshold}}",
+              "Shortfall": "={{$json.Shortfall}}"
             }
           },
           "options": {}
@@ -92,15 +112,52 @@
         "name": "Append Alerts",
         "type": "n8n-nodes-base.googleSheets",
         "typeVersion": 4,
-        "position": [880, 300],
-        "credentials": { "googleApi": "__CRED__googleSheetsCreds" }
+        "position": [
+          880,
+          300
+        ],
+        "credentials": {
+          "googleApi": "__CRED__googleSheetsCreds"
+        }
       }
     ],
     "connections": {
-      "Daily 9 AM":      { "main": [[{ "node": "Read Inventory", "type": "main", "index": 0 }]] },
-      "Read Inventory":  { "main": [[{ "node": "Filter Low Stock", "type": "main", "index": 0 }]] },
-      "Filter Low Stock":{ "main": [[{ "node": "Append Alerts", "type": "main", "index": 0 }]] }
+      "Daily 9 AM": {
+        "main": [
+          [
+            {
+              "node": "Read Inventory",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Read Inventory": {
+        "main": [
+          [
+            {
+              "node": "Filter Low Stock",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filter Low Stock": {
+        "main": [
+          [
+            {
+              "node": "Append Alerts",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
     },
-    "settings": { "executionOrder": "v1" }
+    "settings": {
+      "executionOrder": "v1"
+    }
   }
 }

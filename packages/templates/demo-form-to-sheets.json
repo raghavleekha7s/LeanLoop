@@ -1,10 +1,14 @@
 {
   "id": "demo-form-to-sheets",
-  "name": "Demo Form → Google Sheets",
-  "description": "Receive a form submission on a public webhook URL and log it as a row in a Google Sheet. Great for live demos — curl the webhook on stage, watch the row appear.",
+  "name": "Demo Form \u2192 Google Sheets",
+  "description": "Receive a form submission on a public webhook URL and log it as a row in a Google Sheet. Great for live demos \u2014 curl the webhook on stage, watch the row appear.",
   "category": "Sales",
   "requiredAccounts": [
-    { "key": "googleSheetsCreds", "provider": "google-sheets", "label": "Google Sheets" }
+    {
+      "key": "googleSheetsCreds",
+      "provider": "google-sheets",
+      "label": "Google Sheets"
+    }
   ],
   "variables": [
     {
@@ -23,15 +27,21 @@
     }
   ],
   "n8nWorkflow": {
-    "name": "LeanLoop — Demo Form to Google Sheets",
+    "name": "LeanLoop \u2014 Demo Form to Google Sheets",
     "nodes": [
       {
-        "parameters": { "path": "demo-form", "options": {} },
+        "parameters": {
+          "path": "demo-form",
+          "options": {}
+        },
         "id": "webhook-1",
         "name": "Demo Webhook",
         "type": "n8n-nodes-base.webhook",
         "typeVersion": 1,
-        "position": [240, 300]
+        "position": [
+          240,
+          300
+        ]
       },
       {
         "parameters": {
@@ -41,10 +51,14 @@
         "name": "Parse Form",
         "type": "n8n-nodes-base.function",
         "typeVersion": 1,
-        "position": [480, 300]
+        "position": [
+          480,
+          300
+        ]
       },
       {
         "parameters": {
+          "authentication": "serviceAccount",
           "operation": "append",
           "documentId": "__VAR__leanloopSheetId",
           "sheetName": "__VAR__leanloopSheetTab",
@@ -63,14 +77,41 @@
         "name": "Append Row",
         "type": "n8n-nodes-base.googleSheets",
         "typeVersion": 4,
-        "position": [720, 300],
-        "credentials": { "googleApi": "__CRED__googleSheetsCreds" }
+        "position": [
+          720,
+          300
+        ],
+        "credentials": {
+          "googleApi": "__CRED__googleSheetsCreds"
+        }
       }
     ],
     "connections": {
-      "Demo Webhook": { "main": [[{ "node": "Parse Form", "type": "main", "index": 0 }]] },
-      "Parse Form": { "main": [[{ "node": "Append Row", "type": "main", "index": 0 }]] }
+      "Demo Webhook": {
+        "main": [
+          [
+            {
+              "node": "Parse Form",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Form": {
+        "main": [
+          [
+            {
+              "node": "Append Row",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
     },
-    "settings": { "executionOrder": "v1" }
+    "settings": {
+      "executionOrder": "v1"
+    }
   }
 }

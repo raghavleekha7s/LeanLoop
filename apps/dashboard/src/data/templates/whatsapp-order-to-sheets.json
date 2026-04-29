@@ -1,10 +1,14 @@
 {
   "id": "whatsapp-order-to-sheets",
-  "name": "WhatsApp Order → Google Sheets",
+  "name": "WhatsApp Order \u2192 Google Sheets",
   "description": "When a customer sends an order on WhatsApp, capture it as a row in a Google Sheet.",
   "category": "Sales",
   "requiredAccounts": [
-    { "key": "googleSheetsCreds", "provider": "google-sheets", "label": "Google Sheets" }
+    {
+      "key": "googleSheetsCreds",
+      "provider": "google-sheets",
+      "label": "Google Sheets"
+    }
   ],
   "variables": [
     {
@@ -23,15 +27,21 @@
     }
   ],
   "n8nWorkflow": {
-    "name": "LeanLoop — WhatsApp Order to Google Sheets",
+    "name": "LeanLoop \u2014 WhatsApp Order to Google Sheets",
     "nodes": [
       {
-        "parameters": { "path": "whatsapp-order", "options": {} },
+        "parameters": {
+          "path": "whatsapp-order",
+          "options": {}
+        },
         "id": "webhook-1",
         "name": "WhatsApp Webhook",
         "type": "n8n-nodes-base.webhook",
         "typeVersion": 1,
-        "position": [240, 300]
+        "position": [
+          240,
+          300
+        ]
       },
       {
         "parameters": {
@@ -41,10 +51,14 @@
         "name": "Parse Order",
         "type": "n8n-nodes-base.function",
         "typeVersion": 1,
-        "position": [480, 300]
+        "position": [
+          480,
+          300
+        ]
       },
       {
         "parameters": {
+          "authentication": "serviceAccount",
           "operation": "append",
           "documentId": "__VAR__leanloopSheetId",
           "sheetName": "__VAR__leanloopSheetTab",
@@ -63,14 +77,41 @@
         "name": "Append Row",
         "type": "n8n-nodes-base.googleSheets",
         "typeVersion": 4,
-        "position": [720, 300],
-        "credentials": { "googleApi": "__CRED__googleSheetsCreds" }
+        "position": [
+          720,
+          300
+        ],
+        "credentials": {
+          "googleApi": "__CRED__googleSheetsCreds"
+        }
       }
     ],
     "connections": {
-      "WhatsApp Webhook": { "main": [[{ "node": "Parse Order", "type": "main", "index": 0 }]] },
-      "Parse Order": { "main": [[{ "node": "Append Row", "type": "main", "index": 0 }]] }
+      "WhatsApp Webhook": {
+        "main": [
+          [
+            {
+              "node": "Parse Order",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Order": {
+        "main": [
+          [
+            {
+              "node": "Append Row",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
     },
-    "settings": { "executionOrder": "v1" }
+    "settings": {
+      "executionOrder": "v1"
+    }
   }
 }
