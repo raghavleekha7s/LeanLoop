@@ -89,7 +89,24 @@ check_url() {
   fi
 }
 
-check_url "dashboard home" "${BASE}/" "200"
+# Dashboard home — if admin gate is enabled, expect 401 unauth and 200 with auth.
+ADMIN_PW=$(get_env LEANLOOP_ADMIN_PASSWORD)
+if [ -n "$ADMIN_PW" ]; then
+  unauth_code=$(curl -s -o /dev/null -w "%{http_code}" -m 10 -k "${BASE}/" || echo "000")
+  if [ "$unauth_code" = "401" ]; then
+    pass "dashboard admin gate returns 401 unauthenticated"
+  else
+    fail "dashboard gate returned $unauth_code (expected 401 unauthenticated)"
+  fi
+  auth_code=$(curl -s -o /dev/null -w "%{http_code}" -m 10 -k -u "admin:${ADMIN_PW}" "${BASE}/" || echo "000")
+  if [ "$auth_code" = "200" ]; then
+    pass "dashboard home with admin auth → 200"
+  else
+    fail "dashboard home with admin auth → $auth_code"
+  fi
+else
+  check_url "dashboard home" "${BASE}/" "200"
+fi
 # n8n redirects to /n8n/setup or shows login on first run — accept any 2xx/3xx
 URL_N8N="${BASE}/n8n/"
 code=$(curl -s -o /dev/null -w "%{http_code}" -m 10 -k "$URL_N8N" || echo "000")
