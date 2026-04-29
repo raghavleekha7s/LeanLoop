@@ -31,6 +31,7 @@
     "nodes": [
       {
         "parameters": {
+          "httpMethod": "POST",
           "path": "whatsapp-order",
           "options": {}
         },
