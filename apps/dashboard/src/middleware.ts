@@ -23,6 +23,9 @@ export function middleware(req: NextRequest) {
   // Allow inbound webhooks from third parties (Meta, Razorpay, Shiprocket).
   // Each route handles its own signature/token verification.
   if (pathname.startsWith('/api/webhooks/')) return NextResponse.next();
+  // Public-facing forms (/forms/lead, /forms/feedback, etc.) — these are
+  // designed to be embedded on a customer's website or scanned via QR.
+  if (pathname.startsWith('/forms/')) return NextResponse.next();
 
   const cookie = req.cookies.get(COOKIE_NAME)?.value;
   if (cookie && cookie === expectedCookie(password)) {
