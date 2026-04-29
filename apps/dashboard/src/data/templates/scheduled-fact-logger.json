@@ -1,0 +1,92 @@
+{
+  "id": "scheduled-fact-logger",
+  "name": "Scheduled Fact Logger → Sheets",
+  "description": "Every minute, fetch a random useless-but-fun fact from a public API and append it as a row in a Google Sheet. Auto-firing demo — perfect for live presentations.",
+  "category": "Ops",
+  "requiredAccounts": [
+    { "key": "googleSheetsCreds", "provider": "google-sheets", "label": "Google Sheets" }
+  ],
+  "variables": [
+    {
+      "key": "leanloopSheetId",
+      "label": "Google Sheet ID",
+      "placeholder": "1A2B3C... (long ID from the sheet URL)",
+      "description": "Sheet to log facts into. Header row: Fetched At, Fact.",
+      "required": true
+    },
+    {
+      "key": "leanloopSheetTab",
+      "label": "Tab name",
+      "placeholder": "Facts",
+      "description": "Exact tab name.",
+      "required": true
+    }
+  ],
+  "n8nWorkflow": {
+    "name": "LeanLoop — Scheduled Fact Logger",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              { "field": "minutes", "minutesInterval": 1 }
+            ]
+          }
+        },
+        "id": "schedule-1",
+        "name": "Every minute",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1,
+        "position": [240, 300]
+      },
+      {
+        "parameters": {
+          "url": "https://uselessfacts.jsph.pl/api/v2/facts/random",
+          "options": { "response": { "response": { "responseFormat": "json" } } }
+        },
+        "id": "http-1",
+        "name": "Fetch Fact",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [480, 300]
+      },
+      {
+        "parameters": {
+          "functionCode": "const fact = $json.text ?? 'No fact today';\nreturn [{\n  json: {\n    fetchedAt: new Date().toISOString(),\n    fact\n  }\n}];"
+        },
+        "id": "fn-1",
+        "name": "Shape",
+        "type": "n8n-nodes-base.function",
+        "typeVersion": 1,
+        "position": [720, 300]
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": "__VAR__leanloopSheetId",
+          "sheetName": "__VAR__leanloopSheetTab",
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Fetched At": "={{$json.fetchedAt}}",
+              "Fact": "={{$json.fact}}"
+            }
+          },
+          "options": {}
+        },
+        "id": "sheets-1",
+        "name": "Append Row",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4,
+        "position": [960, 300],
+        "credentials": { "googleApi": "__CRED__googleSheetsCreds" }
+      }
+    ],
+    "connections": {
+      "Every minute": { "main": [[{ "node": "Fetch Fact", "type": "main", "index": 0 }]] },
+      "Fetch Fact":   { "main": [[{ "node": "Shape", "type": "main", "index": 0 }]] },
+      "Shape":        { "main": [[{ "node": "Append Row", "type": "main", "index": 0 }]] }
+    },
+    "settings": { "executionOrder": "v1" }
+  }
+}

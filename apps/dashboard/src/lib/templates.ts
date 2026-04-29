@@ -8,14 +8,20 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { LeanLoopTemplate } from '@/types';
 
+import demoFormToSheets from '@/data/templates/demo-form-to-sheets.json';
 import razorpayToTally from '@/data/templates/razorpay-to-tally.json';
+import scheduledFactLogger from '@/data/templates/scheduled-fact-logger.json';
 import shiprocketTracking from '@/data/templates/shiprocket-tracking.json';
 import whatsappOrderToSheets from '@/data/templates/whatsapp-order-to-sheets.json';
 
+// Order matters — the dashboard renders templates in this order. Demo
+// templates first because they're the easiest path to a successful first run.
 const BUNDLED: LeanLoopTemplate[] = [
+  demoFormToSheets as LeanLoopTemplate,
+  scheduledFactLogger as LeanLoopTemplate,
+  whatsappOrderToSheets as LeanLoopTemplate,
   razorpayToTally as LeanLoopTemplate,
   shiprocketTracking as LeanLoopTemplate,
-  whatsappOrderToSheets as LeanLoopTemplate,
 ];
 
 async function loadFromDir(dir: string): Promise<LeanLoopTemplate[] | null> {

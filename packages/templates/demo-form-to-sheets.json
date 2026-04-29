@@ -1,0 +1,76 @@
+{
+  "id": "demo-form-to-sheets",
+  "name": "Demo Form → Google Sheets",
+  "description": "Receive a form submission on a public webhook URL and log it as a row in a Google Sheet. Great for live demos — curl the webhook on stage, watch the row appear.",
+  "category": "Sales",
+  "requiredAccounts": [
+    { "key": "googleSheetsCreds", "provider": "google-sheets", "label": "Google Sheets" }
+  ],
+  "variables": [
+    {
+      "key": "leanloopSheetId",
+      "label": "Google Sheet ID",
+      "placeholder": "1A2B3C... (long ID from the sheet URL)",
+      "description": "Open your Sheet, copy the long ID between /d/ and /edit in the URL.",
+      "required": true
+    },
+    {
+      "key": "leanloopSheetTab",
+      "label": "Tab name",
+      "placeholder": "Submissions",
+      "description": "Exact name of the tab to append into. Header row should be: Received At, Name, Email, Message.",
+      "required": true
+    }
+  ],
+  "n8nWorkflow": {
+    "name": "LeanLoop — Demo Form to Google Sheets",
+    "nodes": [
+      {
+        "parameters": { "path": "demo-form", "options": {} },
+        "id": "webhook-1",
+        "name": "Demo Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1,
+        "position": [240, 300]
+      },
+      {
+        "parameters": {
+          "functionCode": "const body = $json.body ?? $json;\nreturn [{\n  json: {\n    receivedAt: new Date().toISOString(),\n    name: body.name ?? 'Anonymous',\n    email: body.email ?? '',\n    message: body.message ?? ''\n  }\n}];"
+        },
+        "id": "fn-1",
+        "name": "Parse Form",
+        "type": "n8n-nodes-base.function",
+        "typeVersion": 1,
+        "position": [480, 300]
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": "__VAR__leanloopSheetId",
+          "sheetName": "__VAR__leanloopSheetTab",
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Received At": "={{$json.receivedAt}}",
+              "Name": "={{$json.name}}",
+              "Email": "={{$json.email}}",
+              "Message": "={{$json.message}}"
+            }
+          },
+          "options": {}
+        },
+        "id": "sheets-1",
+        "name": "Append Row",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4,
+        "position": [720, 300],
+        "credentials": { "googleApi": "__CRED__googleSheetsCreds" }
+      }
+    ],
+    "connections": {
+      "Demo Webhook": { "main": [[{ "node": "Parse Form", "type": "main", "index": 0 }]] },
+      "Parse Form": { "main": [[{ "node": "Append Row", "type": "main", "index": 0 }]] }
+    },
+    "settings": { "executionOrder": "v1" }
+  }
+}
