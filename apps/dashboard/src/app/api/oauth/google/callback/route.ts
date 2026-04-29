@@ -21,15 +21,33 @@ export async function GET(req: Request) {
 
   try {
     const tokens = await exchangeCode(code);
+
+    // n8n's OAuth2 credentials store the token bundle under `oauthTokenData`.
+    // Pick the right credential type based on which scope the user requested.
+    const n8nType =
+      scope === 'gmail' ? 'gmailOAuth2' : 'googleSheetsOAuth2Api';
+
+    const oauthTokenData = {
+      access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token,
+      scope: tokens.scope,
+      token_type: tokens.token_type,
+      // n8n stores expiry as a Unix-ish epoch field; tokens.expires_in is
+      // seconds-from-now, so add to current time.
+      expires_in: tokens.expires_in,
+      expiry_date: Date.now() + tokens.expires_in * 1000,
+    };
+
     const cred = await createCredential({
       name: `Google ${scope} (${new Date().toISOString().slice(0, 10)})`,
-      type: 'googleApi',
+      type: n8nType,
       data: {
         clientId: process.env.GOOGLE_OAUTH_CLIENT_ID,
         clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET,
+        oauthTokenData,
+        // Some n8n credentials also read top-level access/refresh tokens.
         accessToken: tokens.access_token,
         refreshToken: tokens.refresh_token,
-        scope: tokens.scope,
       },
     });
 

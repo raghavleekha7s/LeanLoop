@@ -38,12 +38,12 @@ export const CREDENTIAL_SPECS: Record<AccountProvider, CredentialSpec> = {
     ],
   },
   'google-sheets': {
-    n8nType: 'googleApi',
+    n8nType: 'googleSheetsOAuth2Api',
     fields: [],
     oauthStart: '/api/oauth/google/start?scope=sheets',
   },
   gmail: {
-    n8nType: 'googleApi',
+    n8nType: 'gmailOAuth2',
     fields: [],
     oauthStart: '/api/oauth/google/start?scope=gmail',
   },

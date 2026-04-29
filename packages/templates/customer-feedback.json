@@ -65,7 +65,7 @@
         "type": "n8n-nodes-base.googleSheets",
         "typeVersion": 4,
         "position": [720, 300],
-        "credentials": { "googleApi": "__CRED__googleSheetsCreds" }
+        "credentials": { "googleSheetsOAuth2Api": "__CRED__googleSheetsCreds" }
       }
     ],
     "connections": {
